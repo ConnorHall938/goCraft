@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"goCraft/lib/block"
 	"goCraft/lib/camera"
 	"goCraft/lib/chunk"
 	"goCraft/lib/render"
@@ -51,14 +50,12 @@ func main() {
 	ch.Fill(1) // fill with grass
 	mesh := ch.BuildMesh()
 	fmt.Printf("Chunk mesh: %d vertices, %d indices\n", len(mesh.Vertices)/8, len(mesh.Indices))
-	// Get a simple cube mesh
-	blockMesh := block.BuildCubeMesh(block.Grass)
-	fmt.Printf("Cube mesh: %d vertices, %d indices\n", len(blockMesh.Vertices)/8, len(blockMesh.Indices))
+
 	// Build renderer
 	r := render.NewRenderer(window, prog, atlas)
 	r.UploadMesh(mesh.Vertices, mesh.Indices)
 
-	camera := camera.NewCamera(mgl32.Vec3{20, 80, 20})
+	camera := camera.NewCamera(mgl32.Vec3{0, 130, 0})
 	window.SetInputMode(glfw.CursorMode, glfw.CursorDisabled)
 
 	window.SetCursorPosCallback(func(w *glfw.Window, xpos float64, ypos float64) {
