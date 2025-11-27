@@ -10,6 +10,11 @@ import (
 	"github.com/go-gl/gl/v4.6-core/gl"
 )
 
+const (
+	TEXTURE_MAX_ANISOTROPY_EXT     = 0x84FE
+	MAX_TEXTURE_MAX_ANISOTROPY_EXT = 0x84FF
+)
+
 func LoadAtlas(paths []string) uint32 {
 	rgba := image.NewRGBA(image.Rect(0, 0, 256*4, 256*2))
 
@@ -25,12 +30,16 @@ func LoadAtlas(paths []string) uint32 {
 		if err != nil {
 			panic(err)
 		}
+
+		// copy texture into its cell
 		x := (i % 4) * 256
 		y := (i / 4) * 256
 		draw.Draw(rgba, image.Rect(x, y, x+256, y+256), img, image.Point{}, draw.Src)
+
 		file.Close()
 	}
 
+	// --- Upload to OpenGL ---
 	var tex uint32
 	gl.GenTextures(1, &tex)
 	gl.BindTexture(gl.TEXTURE_2D, tex)
@@ -49,15 +58,35 @@ func LoadAtlas(paths []string) uint32 {
 		gl.Ptr(rgba.Pix),
 	)
 
-	// 🔴 TEMP: no mipmaps
-	// gl.GenerateMipmap(gl.TEXTURE_2D)
+	// ----------------------------------------
+	// ✅ MIPMAPS ENABLED
+	// ----------------------------------------
+	gl.GenerateMipmap(gl.TEXTURE_2D)
 
-	// 🔴 TEMP: nearest sampling only
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+	// MINIFICATION: use trilinear filtering (best quality)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
+
+	// MAGNIFICATION: linear smoothing
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
-	// wrapping doesn’t really matter for an atlas, but this is fine:
+
+	// ----------------------------------------
+	// ✅ CLAMP to prevent bleeding between tiles
+	// ----------------------------------------
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+
+	// ----------------------------------------
+	// ✅ ANISOTROPIC FILTERING
+	// ----------------------------------------
+	var maxAniso float32
+	gl.GetFloatv(MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAniso)
+
+	if maxAniso > 0 {
+		gl.TexParameterf(gl.TEXTURE_2D, TEXTURE_MAX_ANISOTROPY_EXT, maxAniso)
+		fmt.Printf("Anisotropic filtering enabled: %.1fx\n", maxAniso)
+	} else {
+		fmt.Println("Anisotropic filtering not supported.")
+	}
 
 	return tex
 }
