@@ -10,7 +10,7 @@ import (
 	"runtime"
 	"strings"
 
-	"goCraft/lib/block"
+	"goCraft/lib/chunk"
 
 	"github.com/go-gl/gl/v4.6-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
@@ -44,6 +44,11 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
+
+	window.SetFramebufferSizeCallback(func(w *glfw.Window, width int, height int) {
+		gl.Viewport(0, 0, int32(width), int32(height))
+	})
+
 	window.MakeContextCurrent()
 
 	if err := gl.Init(); err != nil {
@@ -66,9 +71,12 @@ func main() {
 	})
 
 	// --- Cube vertices ---
-	grassMesh := block.BuildCubeMesh(block.Grass)
-	verts := grassMesh.Vertices
-	inds := grassMesh.Indices
+	chunk := chunk.NewChunk()
+	chunk.Fill(1) // grass block
+
+	mesh := chunk.BuildMesh()
+	verts := mesh.Vertices
+	inds := mesh.Indices
 
 	// --- Setup OpenGL buffers ---
 	var VAO, VBO, EBO uint32
@@ -110,25 +118,21 @@ func main() {
 			gl.Uniform1i(atlasLoc, 0) // Texture unit 0
 		}
 
-		// Time for animation
-		time := float32(glfw.GetTime())
-
 		// Camera
-		eye := mgl32.Vec3{2, 2, 4}
-		center := mgl32.Vec3{0, 0, 0}
+		eye := mgl32.Vec3{60, 80, 60}
+		center := mgl32.Vec3{16, 0, 16}
 		up := mgl32.Vec3{0, 1, 0}
 
 		view := mgl32.LookAtV(eye, center, up)
 
-		// Projection
-		proj := mgl32.Perspective(mgl32.DegToRad(45), float32(width)/float32(height), 0.1, 100.0)
-
-		// Model rotation (rotate on two axes to expose all faces)
-		model := mgl32.HomogRotate3DY(time).Mul4(
-			mgl32.HomogRotate3DX(time),
+		winWidth, winHeight := window.GetFramebufferSize()
+		proj := mgl32.Perspective(
+			mgl32.DegToRad(45),
+			float32(winWidth)/float32(winHeight),
+			0.1, 1000.0,
 		)
 
-		mvp := proj.Mul4(view).Mul4(model)
+		mvp := proj.Mul4(view)
 
 		// Upload to shader
 		mvpLoc := gl.GetUniformLocation(program, gl.Str("uMVP\x00"))
