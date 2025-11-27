@@ -25,5 +25,5 @@ func UVRect(index int) (float32, float32, float32, float32) {
 
 	v0 := float32(row) / float32(AtlasRows)
 	v1 := v0 + 1.0/float32(AtlasRows)
-	return u0, v0, u1, v1
+	return u0, v1, u1, v0
 }

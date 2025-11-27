@@ -10,8 +10,7 @@ import (
 	"runtime"
 	"strings"
 
-	"goCraft/lib/atlas"
-	"goCraft/lib/cube"
+	"goCraft/lib/block"
 
 	"github.com/go-gl/gl/v4.6-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
@@ -58,20 +57,18 @@ func main() {
 
 	// --- Load texture ---
 	texture := loadAllTextures([]string{
-		"assets/textures/grass_block_top.png",
-		"assets/textures/grass_block_side.png",
+		"assets/textures/grass_top.png",
+		"assets/textures/grass_side.png",
 		"assets/textures/dirt.png",
 		"assets/textures/stone.png",
-		"assets/textures/oak_log.png",
-		"assets/textures/oak_log_top.png",
+		"assets/textures/log_oak.png",
+		"assets/textures/log_oak_top.png",
 	})
 
 	// --- Cube vertices ---
-	verts, inds := cube.MakeCube(
-		atlas.TextureIndex["wood_end"],
-		atlas.TextureIndex["wood_end"],
-		atlas.TextureIndex["wood_side"],
-	)
+	grassMesh := block.BuildCubeMesh(block.Grass)
+	verts := grassMesh.Vertices
+	inds := grassMesh.Indices
 
 	// --- Setup OpenGL buffers ---
 	var VAO, VBO, EBO uint32
@@ -88,22 +85,32 @@ func main() {
 	// Upload indices
 	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, EBO)
 	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, len(inds)*4, gl.Ptr(inds), gl.STATIC_DRAW)
+
 	// Vertex attribute 0 = position
 	gl.EnableVertexAttribArray(0)
-	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 5*4, gl.PtrOffset(0))
+	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 8*4, gl.PtrOffset(0))
 
 	// Vertex attribute 1 = texture coordinates
 	gl.EnableVertexAttribArray(1)
-	gl.VertexAttribPointer(1, 2, gl.FLOAT, false, 5*4, gl.PtrOffset(3*4))
+	gl.VertexAttribPointer(1, 2, gl.FLOAT, false, 8*4, gl.PtrOffset(3*4))
+	// Vertex attribute 2 = tint
+	gl.EnableVertexAttribArray(2)
+	gl.VertexAttribPointer(2, 3, gl.FLOAT, false, 8*4, gl.PtrOffset(5*4))
 
 	gl.BindVertexArray(0)
-	gl.Enable(gl.DEPTH_TEST)
 
+	gl.Enable(gl.DEPTH_TEST)
 	// --- Main loop ---
 	for !window.ShouldClose() {
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 		gl.UseProgram(program)
 
+		atlasLoc := gl.GetUniformLocation(program, gl.Str("uAtlas\x00"))
+		if atlasLoc != -1 {
+			gl.Uniform1i(atlasLoc, 0) // Texture unit 0
+		}
+
+		// Time for animation
 		time := float32(glfw.GetTime())
 
 		// Camera
@@ -117,15 +124,15 @@ func main() {
 		proj := mgl32.Perspective(mgl32.DegToRad(45), float32(width)/float32(height), 0.1, 100.0)
 
 		// Model rotation (rotate on two axes to expose all faces)
-		model := mgl32.HomogRotate3DY(time * 0.7).Mul4(
-			mgl32.HomogRotate3DX(time * 0.4),
+		model := mgl32.HomogRotate3DY(time).Mul4(
+			mgl32.HomogRotate3DX(time),
 		)
 
 		mvp := proj.Mul4(view).Mul4(model)
 
 		// Upload to shader
-		loc := gl.GetUniformLocation(program, gl.Str("uMVP\x00"))
-		gl.UniformMatrix4fv(loc, 1, false, &mvp[0])
+		mvpLoc := gl.GetUniformLocation(program, gl.Str("uMVP\x00"))
+		gl.UniformMatrix4fv(mvpLoc, 1, false, &mvp[0])
 
 		// Bind texture
 		gl.ActiveTexture(gl.TEXTURE0)
@@ -194,23 +201,13 @@ func readFile(path string) string {
 	return string(data)
 }
 
-// Map texture names to atlas index
-var TextureIndex = map[string]int{
-	"grass_top":  0,
-	"grass_side": 1,
-	"dirt":       2,
-	"stone":      3,
-	"wood_side":  4,
-	"wood_end":   5,
-}
-
 const (
 	AtlasCols = 4 // 4 textures per row
 	AtlasRows = 2 // 2 textures per column
 )
 
 func loadAllTextures(paths []string) uint32 {
-	rgba := image.NewRGBA(image.Rect(0, 0, 1024*4, 1024*2))
+	rgba := image.NewRGBA(image.Rect(0, 0, 256*4, 256*2))
 	for i, path := range paths {
 		file, err := os.Open(path)
 		if err != nil {
@@ -221,9 +218,9 @@ func loadAllTextures(paths []string) uint32 {
 		if err != nil {
 			panic(err)
 		}
-		x := (i % 4) * 1024
-		y := (i / 4) * 1024
-		draw.Draw(rgba, image.Rect(x, y, x+1024, y+1024), img, image.Point{}, draw.Src)
+		x := (i % 4) * 256
+		y := (i / 4) * 256
+		draw.Draw(rgba, image.Rect(x, y, x+256, y+256), img, image.Point{}, draw.Src)
 		file.Close()
 	}
 	var tex uint32
