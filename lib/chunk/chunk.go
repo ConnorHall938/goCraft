@@ -1,5 +1,7 @@
 package chunk
 
+import "goCraft/lib/block"
+
 type Chunk struct {
 	Blocks   [32][128][32]uint8 // 3D array of block IDs
 	Location [3]int             // Chunk location in the world
@@ -33,6 +35,9 @@ func (c *Chunk) Fill(blockID uint8) {
 	}
 }
 
-func (c *Chunk) Render() {
-	// Placeholder for rendering logic
+func (c *Chunk) isAir(x, y, z int) bool {
+	if x < 0 || x >= 32 || y < 0 || y >= 128 || z < 0 || z >= 32 {
+		return true // Out of bounds is considered air
+	}
+	return c.Blocks[x][y][z] == block.BlockAir
 }

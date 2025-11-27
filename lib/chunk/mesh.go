@@ -11,31 +11,53 @@ type ChunkMesh struct {
 
 func (c *Chunk) BuildMesh() ChunkMesh {
 	mesh := ChunkMesh{}
+	verts := []float32{}
+	inds := []uint32{}
+	indexOffset := uint32(0)
 
 	for x := 0; x < 32; x++ {
 		for y := 0; y < 128; y++ {
 			for z := 0; z < 32; z++ {
-				id := c.Blocks[x][y][z]
-				if id == 0 {
+
+				blockID := c.Blocks[x][y][z]
+				if blockID == 0 {
 					continue // air
 				}
 
-				bt := block.Registry[id]
-				bt.BasePosition = [3]float32{float32(x), float32(y), float32(z)}
+				bt := block.Registry[blockID]
 
-				cube := block.BuildCubeMesh(bt)
+				// Check each of 6 faces
+				neighbors := [6]bool{
+					c.isAir(x, y, z+1), // front
+					c.isAir(x, y, z-1), // back
+					c.isAir(x, y+1, z), // top
+					c.isAir(x, y-1, z), // bottom
+					c.isAir(x+1, y, z), // right
+					c.isAir(x-1, y, z), // left
+				}
 
-				// Append vertices & fix index offset
-				startIndex := uint32(len(mesh.Vertices) / 8)
+				for faceIdx := 0; faceIdx < 6; faceIdx++ {
+					if !neighbors[faceIdx] {
+						continue
+					}
 
-				mesh.Vertices = append(mesh.Vertices, cube.Vertices...)
+					fv, fi := block.MakeFaceMesh(bt, faceIdx, x, y, z)
 
-				for _, idx := range cube.Indices {
-					mesh.Indices = append(mesh.Indices, startIndex+idx)
+					// append vertices
+					verts = append(verts, fv...)
+
+					// remap indices
+					for _, idx := range fi {
+						inds = append(inds, indexOffset+idx)
+					}
+
+					indexOffset += 4 // 4 vertices per face
 				}
 			}
 		}
 	}
 
+	mesh.Vertices = verts
+	mesh.Indices = inds
 	return mesh
 }
