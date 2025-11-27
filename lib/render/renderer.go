@@ -16,11 +16,22 @@ type Renderer struct {
 }
 
 func NewRenderer(window *glfw.Window, program, atlas uint32) *Renderer {
-	return &Renderer{
+	r := &Renderer{
 		Window:  window,
 		Program: program,
 		Atlas:   atlas,
 	}
+
+	// depth test should be enabled exactly once.
+	gl.Enable(gl.DEPTH_TEST)
+	gl.DepthFunc(gl.LEQUAL)
+
+	// Optional but recommended
+	gl.Enable(gl.CULL_FACE)
+	gl.CullFace(gl.BACK)
+	gl.FrontFace(gl.CCW)
+
+	return r
 }
 
 // Called once after mesh generation

@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"goCraft/lib/block"
+	"goCraft/lib/camera"
 	"goCraft/lib/chunk"
 	"goCraft/lib/render"
 	"runtime"
@@ -48,22 +50,52 @@ func main() {
 	ch := chunk.NewChunk()
 	ch.Fill(1) // fill with grass
 	mesh := ch.BuildMesh()
-
+	fmt.Printf("Chunk mesh: %d vertices, %d indices\n", len(mesh.Vertices)/8, len(mesh.Indices))
+	// Get a simple cube mesh
+	blockMesh := block.BuildCubeMesh(block.Grass)
+	fmt.Printf("Cube mesh: %d vertices, %d indices\n", len(blockMesh.Vertices)/8, len(blockMesh.Indices))
 	// Build renderer
 	r := render.NewRenderer(window, prog, atlas)
 	r.UploadMesh(mesh.Vertices, mesh.Indices)
+
+	camera := camera.NewCamera(mgl32.Vec3{20, 80, 20})
+	window.SetInputMode(glfw.CursorMode, glfw.CursorDisabled)
+
+	window.SetCursorPosCallback(func(w *glfw.Window, xpos float64, ypos float64) {
+		camera.ProcessMouse(xpos, ypos)
+	})
+
+	lastTime := glfw.GetTime()
 
 	fmt.Println("Ready!")
 
 	// Render loop
 	for !window.ShouldClose() {
+
+		now := glfw.GetTime()
+		dt := float32(now - lastTime)
+		lastTime = now
+
+		// --- keyboard movement ---
+		if window.GetKey(glfw.KeyW) == glfw.Press {
+			camera.MoveForward(dt)
+		}
+		if window.GetKey(glfw.KeyS) == glfw.Press {
+			camera.MoveBackward(dt)
+		}
+		if window.GetKey(glfw.KeyA) == glfw.Press {
+			camera.MoveLeft(dt)
+		}
+		if window.GetKey(glfw.KeyD) == glfw.Press {
+			camera.MoveRight(dt)
+		}
+		if window.GetKey(glfw.KeyEscape) == glfw.Press {
+			window.SetShouldClose(true)
+		}
+
 		w, h := window.GetFramebufferSize()
 
-		eye := mgl32.Vec3{60, 80, 60}
-		center := mgl32.Vec3{16, 64, 16}
-		up := mgl32.Vec3{0, 1, 0}
-
-		view := mgl32.LookAtV(eye, center, up)
+		view := camera.ViewMatrix()
 		proj := mgl32.Perspective(mgl32.DegToRad(60), float32(w)/float32(h), 0.1, 2000.0)
 
 		mvp := proj.Mul4(view)
