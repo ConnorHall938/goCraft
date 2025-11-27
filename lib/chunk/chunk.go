@@ -35,6 +35,28 @@ func (c *Chunk) Fill(blockID uint8) {
 	}
 }
 
+func (c *Chunk) GenerateFlat() {
+	surface := 64
+
+	for x := 0; x < 32; x++ {
+		for z := 0; z < 32; z++ {
+			for y := 0; y <= surface; y++ {
+
+				switch {
+				case y == surface:
+					c.Blocks[x][y][z] = block.BlockGrass
+
+				case y <= surface && y >= surface-5:
+					c.Blocks[x][y][z] = block.BlockDirt
+
+				default:
+					c.Blocks[x][y][z] = block.BlockStone
+				}
+			}
+		}
+	}
+}
+
 func (c *Chunk) isAir(x, y, z int) bool {
 	if x < 0 || x >= 32 || y < 0 || y >= 128 || z < 0 || z >= 32 {
 		return true // Out of bounds is considered air

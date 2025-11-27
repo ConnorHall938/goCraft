@@ -47,7 +47,7 @@ func main() {
 
 	// Build a chunk mesh
 	ch := chunk.NewChunk()
-	ch.Fill(1) // fill with grass
+	ch.GenerateFlat()
 	mesh := ch.BuildMesh()
 	fmt.Printf("Chunk mesh: %d vertices, %d indices\n", len(mesh.Vertices)/8, len(mesh.Indices))
 

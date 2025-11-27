@@ -16,8 +16,8 @@ var TextureIndex = map[string]int{
 }
 
 const (
-	padU = 0.5 / float32(AtlasCols*256) // half pixel padding
-	padV = 0.5 / float32(AtlasRows*256)
+	padU = 0 //0.5 / float32(AtlasCols*256) // half pixel padding
+	padV = 0 //0.5 / float32(AtlasRows*256)
 )
 
 // Returns the UV rectangle (u0,v0,u1,v1) for a texture index
