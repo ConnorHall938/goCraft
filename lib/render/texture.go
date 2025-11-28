@@ -32,6 +32,8 @@ func LoadAtlas(paths []string) (atlas.Atlas, error) {
 
 	image_width := img.Bounds().Dx()
 	image_height := img.Bounds().Dy()
+	// Calculate optimal square-ish atlas dimensions
+	// e.g., 6 textures -> 3x2, 10 textures -> 4x3
 	atlas_width := int(math.Ceil(math.Sqrt(float64(len(paths)))))
 	atlas_height := int(math.Ceil(float64(len(paths)) / float64(atlas_width)))
 
@@ -48,6 +50,7 @@ func LoadAtlas(paths []string) (atlas.Atlas, error) {
 		if err != nil {
 			panic(err)
 		}
+		defer file.Close()
 
 		img, _, err := image.Decode(file)
 		if err != nil {
