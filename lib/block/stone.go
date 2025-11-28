@@ -5,7 +5,7 @@ import "goCraft/lib/atlas"
 var Stone = BlockType{
 	Name: "stone",
 
-	FaceTextures: [6]int{
+	FaceTextures: [6]uint32{
 		atlas.STONE, // front
 		atlas.STONE, // back
 		atlas.STONE, // top

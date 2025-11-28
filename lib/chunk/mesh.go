@@ -1,6 +1,7 @@
 package chunk
 
 import (
+	"goCraft/lib/atlas"
 	"goCraft/lib/block"
 )
 
@@ -9,7 +10,7 @@ type ChunkMesh struct {
 	Indices  []uint32
 }
 
-func (c *Chunk) BuildMesh() ChunkMesh {
+func (c *Chunk) BuildMesh(atlas atlas.Atlas) ChunkMesh {
 	mesh := ChunkMesh{}
 	verts := []float32{}
 	inds := []uint32{}
@@ -41,7 +42,7 @@ func (c *Chunk) BuildMesh() ChunkMesh {
 						continue
 					}
 
-					fv, fi := block.MakeFaceMesh(bt, faceIdx, x, y, z)
+					fv, fi := block.MakeFaceMesh(atlas, bt, faceIdx, x, y, z)
 
 					// append vertices
 					verts = append(verts, fv...)

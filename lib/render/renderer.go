@@ -1,6 +1,8 @@
 package render
 
 import (
+	"goCraft/lib/atlas"
+
 	"github.com/go-gl/gl/v4.6-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
 	"github.com/go-gl/mathgl/mgl32"
@@ -9,13 +11,13 @@ import (
 type Renderer struct {
 	Window  *glfw.Window
 	Program uint32
-	Atlas   uint32
+	Atlas   atlas.Atlas
 	VAO     uint32
 	VBO     uint32
 	EBO     uint32
 }
 
-func NewRenderer(window *glfw.Window, program, atlas uint32) *Renderer {
+func NewRenderer(window *glfw.Window, program uint32, atlas atlas.Atlas) *Renderer {
 	r := &Renderer{
 		Window:  window,
 		Program: program,
@@ -74,7 +76,7 @@ func (r *Renderer) Render(indicesCount int, mvp mgl32.Mat4) {
 	gl.Uniform1i(atlasLoc, 0)
 
 	gl.ActiveTexture(gl.TEXTURE0)
-	gl.BindTexture(gl.TEXTURE_2D, r.Atlas)
+	gl.BindTexture(gl.TEXTURE_2D, r.Atlas.AtlasImageId)
 
 	gl.BindVertexArray(r.VAO)
 	gl.DrawElements(gl.TRIANGLES, int32(indicesCount), gl.UNSIGNED_INT, nil)

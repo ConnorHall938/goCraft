@@ -5,7 +5,7 @@ import "goCraft/lib/atlas"
 var Dirt = BlockType{
 	Name: "dirt",
 
-	FaceTextures: [6]int{
+	FaceTextures: [6]uint32{
 		atlas.DIRT, // front
 		atlas.DIRT, // back
 		atlas.DIRT, // top

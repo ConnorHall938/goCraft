@@ -9,7 +9,7 @@ type CubeMesh struct {
 	FaceRanges [6][2]uint32 // {start, count}
 }
 
-func BuildCubeMesh(bt BlockType) CubeMesh {
+func BuildCubeMesh(atlas atlas.Atlas, bt BlockType) CubeMesh {
 	mesh := CubeMesh{}
 	vertices := []float32{}
 	indices := []uint32{}
@@ -50,7 +50,7 @@ func BuildCubeMesh(bt BlockType) CubeMesh {
 // MakeFaceMesh builds a *single face* of a cube.
 // faceIndex = 0..5 (front, back, top, bottom, right, left)
 // world position = (bx, by, bz)
-func MakeFaceMesh(bt BlockType, faceIndex int, bx, by, bz int) ([]float32, []uint32) {
+func MakeFaceMesh(atlas atlas.Atlas, bt BlockType, faceIndex int, bx, by, bz int) ([]float32, []uint32) {
 	tex := bt.FaceTextures[faceIndex]
 	tint := bt.FaceTints[faceIndex]
 	u0, v0, u1, v1 := atlas.UVRect(tex)

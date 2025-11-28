@@ -1,18 +1,11 @@
 package atlas
 
-const (
-	AtlasCols = 4 // 4 textures per row
-	AtlasRows = 2 // 2 textures per column
-)
-
-// Map texture names to atlas index
-var TextureIndex = map[string]int{
-	"grass_top":  0,
-	"grass_side": 1,
-	"dirt":       2,
-	"stone":      3,
-	"wood_side":  4,
-	"wood_end":   5,
+type Atlas struct {
+	AtlasImageId uint32
+	Columns      uint32
+	Rows         uint32
+	ImageWidth   uint32
+	ImageHeight  uint32
 }
 
 const (
@@ -21,14 +14,14 @@ const (
 )
 
 // Returns the UV rectangle (u0,v0,u1,v1) for a texture index
-func UVRect(index int) (float32, float32, float32, float32) {
-	col := index % AtlasCols
-	row := index / AtlasCols
+func (atlas *Atlas) UVRect(index uint32) (float32, float32, float32, float32) {
+	col := index % atlas.Columns
+	row := index / atlas.Columns
 
-	u0 := float32(col)/float32(AtlasCols) + padU
-	u1 := u0 + 1.0/float32(AtlasCols) - padU
+	u0 := float32(col)/float32(atlas.Columns) + padU
+	u1 := u0 + 1.0/float32(atlas.Columns) - padU
 
-	v0 := float32(row)/float32(AtlasRows) + padV
-	v1 := v0 + 1.0/float32(AtlasRows) - padV
+	v0 := float32(row)/float32(atlas.Rows) + padV
+	v1 := v0 + 1.0/float32(atlas.Rows) - padV
 	return u0, v1, u1, v0
 }

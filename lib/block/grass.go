@@ -5,7 +5,7 @@ import "goCraft/lib/atlas"
 var Grass = BlockType{
 	Name: "grass",
 
-	FaceTextures: [6]int{
+	FaceTextures: [6]uint32{
 		atlas.GRASS_SIDE, // front
 		atlas.GRASS_SIDE, // back
 		atlas.GRASS_TOP,  // top
@@ -17,8 +17,8 @@ var Grass = BlockType{
 	FaceTints: [6][3]float32{
 		{1.0, 1.0, 1.0}, // front
 		{1.0, 1.0, 1.0},
-		{0.8, 1.0, 0.8}, // top
-		{1.0, 1.0, 1.0}, // bottom
+		{0.486, 0.741, 0.42}, // top
+		{1.0, 1.0, 1.0},      // bottom
 		{1.0, 1.0, 1.0},
 		{1.0, 1.0, 1.0},
 	},

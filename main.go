@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"goCraft/lib/block"
 	"goCraft/lib/camera"
 	"goCraft/lib/chunk"
 	"goCraft/lib/render"
@@ -36,7 +37,7 @@ func main() {
 	frag := render.LoadShader("assets/shaders/cube.frag", gl.FRAGMENT_SHADER)
 	prog := render.LinkProgram(vert, frag)
 
-	atlas := render.LoadAtlas([]string{
+	atlas, err := render.LoadAtlas([]string{
 		"assets/textures/grass_top.png",
 		"assets/textures/grass_side.png",
 		"assets/textures/dirt.png",
@@ -44,11 +45,19 @@ func main() {
 		"assets/textures/log_oak.png",
 		"assets/textures/log_oak_top.png",
 	})
+	if err != nil {
+		panic(err)
+	}
 
 	// Build a chunk mesh
 	ch := chunk.NewChunk()
 	ch.GenerateFlat()
-	mesh := ch.BuildMesh()
+	ch.SetBlock(10, chunk.DefaultSurfaceLevel, 10, block.BlockAir) // hole for testing
+	mesh := ch.BuildMesh(atlas)
+
+	// blocka := block.Stone
+	// blocka.BasePosition = [3]float32{0, 100, 0}
+	// mesh := block.BuildCubeMesh(atlas, blocka)
 	fmt.Printf("Chunk mesh: %d vertices, %d indices\n", len(mesh.Vertices)/8, len(mesh.Indices))
 
 	// Build renderer

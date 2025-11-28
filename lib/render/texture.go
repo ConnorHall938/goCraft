@@ -2,9 +2,11 @@ package render
 
 import (
 	"fmt"
+	"goCraft/lib/atlas"
 	"image"
 	"image/draw"
 	_ "image/png"
+	"math"
 	"os"
 
 	"github.com/go-gl/gl/v4.6-core/gl"
@@ -15,26 +17,48 @@ const (
 	MAX_TEXTURE_MAX_ANISOTROPY_EXT = 0x84FF
 )
 
-func LoadAtlas(paths []string) uint32 {
-	rgba := image.NewRGBA(image.Rect(0, 0, 256*4, 256*2))
+func LoadAtlas(paths []string) (atlas.Atlas, error) {
+	// On the first image, find the size and create the atlas RGBA
+	file, err := os.Open(paths[0])
+	if err != nil {
+		panic(err)
+	}
+	img, _, err := image.Decode(file)
+	if err != nil {
+		panic(err)
+	}
 
-	for i, path := range paths {
-		file, err := os.Open(path)
+	fmt.Printf("Decoded %s\n", paths[0])
+
+	image_width := img.Bounds().Dx()
+	image_height := img.Bounds().Dy()
+	atlas_width := int(math.Ceil(math.Sqrt(float64(len(paths)))))
+	atlas_height := int(math.Ceil(float64(len(paths)) / float64(atlas_width)))
+
+	rgba := image.NewRGBA(image.Rect(0, 0, atlas_width*image_width, atlas_height*image_height))
+	// copy first texture into its cell
+	draw.Draw(rgba, image.Rect(0, 0, image_width, image_height), img, image.Point{}, draw.Src)
+
+	file.Close()
+	// Now load each image and copy it into the atlas RGBA
+
+	// Iterate over the other images, skipping the first.
+	for i := 1; i < len(paths); i++ {
+		file, err := os.Open(paths[i])
 		if err != nil {
 			panic(err)
 		}
-
-		fmt.Printf("Decoded %s\n", path)
 
 		img, _, err := image.Decode(file)
 		if err != nil {
 			panic(err)
 		}
+		fmt.Printf("Decoded %s\n", paths[i])
 
 		// copy texture into its cell
-		x := (i % 4) * 256
-		y := (i / 4) * 256
-		draw.Draw(rgba, image.Rect(x, y, x+256, y+256), img, image.Point{}, draw.Src)
+		x := (i % atlas_width) * image_width
+		y := (i / atlas_width) * image_height
+		draw.Draw(rgba, image.Rect(x, y, x+image_width, y+image_height), img, image.Point{}, draw.Src)
 
 		file.Close()
 	}
@@ -88,5 +112,11 @@ func LoadAtlas(paths []string) uint32 {
 		fmt.Println("Anisotropic filtering not supported.")
 	}
 
-	return tex
+	return atlas.Atlas{
+		AtlasImageId: tex,
+		Rows:         uint32(atlas_height),
+		Columns:      uint32(atlas_width),
+		ImageWidth:   uint32(image_width),
+		ImageHeight:  uint32(image_height),
+	}, nil
 }
